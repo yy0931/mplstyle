@@ -2,7 +2,7 @@
 	"name": "mplstyle",
 	"displayName": "mplstyle (Matplotlib)",
 	"description": "Intellisense for .mplstyle and matplotlibrc files",
-	"version": "1.14.3",
+	"version": "1.14.4",
 	"license": "MIT",
 	"publisher": "yy0931",
 	"icon": "matplotlib/logo.png",
