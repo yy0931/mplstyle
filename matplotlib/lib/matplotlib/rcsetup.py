@@ -23,6 +23,7 @@ import re
 import numpy as np
 
 from matplotlib import _api, cbook
+from matplotlib.backends import BackendFilter, backend_registry
 from matplotlib.cbook import ls_mapper
 from matplotlib.colors import Colormap, is_color_like
 from matplotlib._fontconfig_pattern import parse_fontconfig_pattern
@@ -32,20 +33,30 @@ from matplotlib._enums import JoinStyle, CapStyle
 from cycler import Cycler, cycler as ccycler
 
 
-# The capitalized forms are needed for ipython at present; this may
-# change for later versions.
-interactive_bk = [
-    'GTK3Agg', 'GTK3Cairo', 'GTK4Agg', 'GTK4Cairo',
-    'MacOSX',
-    'nbAgg',
-    'QtAgg', 'QtCairo', 'Qt5Agg', 'Qt5Cairo',
-    'TkAgg', 'TkCairo',
-    'WebAgg',
-    'WX', 'WXAgg', 'WXCairo',
-]
-non_interactive_bk = ['agg', 'cairo',
-                      'pdf', 'pgf', 'ps', 'svg', 'template']
-all_backends = interactive_bk + non_interactive_bk
+@_api.caching_module_getattr
+class __getattr__:
+    @_api.deprecated(
+        "3.9",
+        alternative="``matplotlib.backends.backend_registry.list_builtin"
+            "(matplotlib.backends.BackendFilter.INTERACTIVE)``")
+    @property
+    def interactive_bk(self):
+        return backend_registry.list_builtin(BackendFilter.INTERACTIVE)
+
+    @_api.deprecated(
+        "3.9",
+        alternative="``matplotlib.backends.backend_registry.list_builtin"
+            "(matplotlib.backends.BackendFilter.NON_INTERACTIVE)``")
+    @property
+    def non_interactive_bk(self):
+        return backend_registry.list_builtin(BackendFilter.NON_INTERACTIVE)
+
+    @_api.deprecated(
+        "3.9",
+        alternative="``matplotlib.backends.backend_registry.list_builtin()``")
+    @property
+    def all_backends(self):
+        return backend_registry.list_builtin()
 
 
 class ValidateInStrings:
@@ -256,7 +267,7 @@ def validate_fonttype(s):
 
 
 _validate_standard_backends = ValidateInStrings(
-    'backend', all_backends, ignorecase=True)
+    'backend', backend_registry.list_builtin(), ignorecase=True)
 _auto_backend_sentinel = object()
 
 
@@ -1040,12 +1051,13 @@ _validators = {
                                 "bb", "frak", "scr", "regular"],
     "mathtext.fallback":       _validate_mathtext_fallback,
 
-    "image.aspect":          validate_aspect,  # equal, auto, a number
-    "image.interpolation":   validate_string,
-    "image.cmap":            _validate_cmap,  # gray, jet, etc.
-    "image.lut":             validate_int,  # lookup table
-    "image.origin":          ["upper", "lower"],
-    "image.resample":        validate_bool,
+    "image.aspect":              validate_aspect,  # equal, auto, a number
+    "image.interpolation":       validate_string,
+    "image.interpolation_stage": ["data", "rgba"],
+    "image.cmap":                _validate_cmap,  # gray, jet, etc.
+    "image.lut":                 validate_int,  # lookup table
+    "image.origin":              ["upper", "lower"],
+    "image.resample":            validate_bool,
     # Specify whether vector graphics backends will combine all images on a
     # set of Axes into a single composite image
     "image.composite_image": validate_bool,
